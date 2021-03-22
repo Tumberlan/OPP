@@ -253,60 +253,47 @@ void standart_prog(int argc, char** argv){
 //Mpi_comm_rank
 //Mpi_send
 //Mpi_recieve
-/*
+
 void mpi_1(int argc, char* argv[]){
    MPI_Init(&argc, &argv);
    int size, rank;
    MPI_Comm_size(MPI_COMM_WORLD, &size);
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+   int M;
+   int N = 4;
+   int skip;
+
    if(rank == 0){
-       int N;
-       std::cin >> N;
-
        double Matrix[N*N];
-       double* b = new double(N);
-       double* x = new double(N);
-       double* r = new double(N);
-
        fill_matrix(Matrix, N);
-
-       for(int i = 0; i < N; i++){
-           b[i] = i+1;
-           x[i] = 0;
-           r[i] = 1;
-       }
 
        int ex_N = N;
        int ex_size = size;
        int skip = 0;
        for(int i = 0; i < size; i++){
            int M = ex_N/ex_size;
-           MPI_Send(&N, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
            MPI_Send(&M, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
            MPI_Send(Matrix+N*skip, N*M,MPI_DOUBLE, i,0,MPI_COMM_WORLD);
-           MPI_Send(x, N, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
-           MPI_Send(b, N, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
-           MPI_Send(r,N,MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
            skip += M;
            ex_N -= M;
            ex_size--;
        }
    }
-    int N, M;
-    MPI_Recv(&N, 1, MPI_INT, 0,0,MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     MPI_Recv(&M, 1, MPI_INT, 0,0,MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    double Matrix[N*M];
+    double* Matrix = new double [N*M];
     double* x = new double(N);
     double* b = new double(N);
     double* r = new double(N);
+    for(int i = 0; i < N; i++){
+        b[i] = N+1;
+        x[i] = 0;
+        r[i] = 1;
+    }
     double epsilon = 0.00001;
     MPI_Recv(&Matrix, N*M, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    MPI_Recv(&x, N, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    MPI_Recv(&b, N, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    MPI_Recv(&r,N,MPI_DOUBLE,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-    double* matrix_res = new double(N);
-    double* mul_res = new double(N);
+    double* matrix_res = new double[N];
+    double* mul_res = new double[N];
     for(int i = 0; i < N; i++){
         matrix_res[i] = 0;
     }
@@ -316,27 +303,21 @@ void mpi_1(int argc, char* argv[]){
     while(vector_length(r, N) / vector_length(b, N) >= epsilon) {
         MPI_mul_f(Matrix, x, M, 1, matrix_res, rank);
 
-        double final_matrix_res[N];
-        MPI_Allreduce(&matrix_res, &final_matrix_res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        double* final_matrix_res = new double[N];
+        MPI_Allreduce(matrix_res, final_matrix_res, N, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
         for (int i = 0; i < N; i++) {
             r[i] = b[i] - final_matrix_res[i];
         }
 
-
-        std::cout << '\n' << "r" << '\n';
-        for(int i = 0;i < N; i++){
-            std::cout << r[i] << '\n';
-        }
-        std::cout << '\n';
-        //
-        double z[N];
+        double* z = new double[N];
         for (int i = 0; i < N; i++) {
             z[i] = r[i];
         }
 
 
-        mul_f(Matrix, z, N, 1, final_matrix_res);
+        MPI_mul_f(Matrix, z, N, M, matrix_res,rank);
+        MPI_Allreduce(matrix_res, final_matrix_res, N, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         double alpha = scalar(r, r, N) / scalar(final_matrix_res, z, N);
 
         double* next_x = new double(N);
@@ -346,16 +327,18 @@ void mpi_1(int argc, char* argv[]){
         }
 
 
-        mul_f(Matrix, z, N, 1, matrix_res);
+        MPI_mul_f(Matrix, z, N, M, matrix_res, rank);
+        MPI_Allreduce(matrix_res, final_matrix_res, N, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
         const_mul(final_matrix_res, alpha, N, mul_res);
-        double* next_r = new double(N);
+        double* next_r = new double[N];
         for (int i = 0; i < N; i++) {
             next_r[i] = r[i] - mul_res[i];
         }
 
         double beta = scalar(next_r, next_r, N) / scalar(r, r, N);
 
-        double* next_z = new double(N);
+        double* next_z = new double[N];
         const_mul(z, beta, N, mul_res);
         for (int i = 0; i < N; i++) {
             next_z[i] = next_r[i] + mul_res[i];
@@ -374,7 +357,7 @@ void mpi_1(int argc, char* argv[]){
     }
     MPI_Finalize();
 }
-
+/*
 void mpi_2(int argc, char* argv[]){
     MPI_Init(&argc, &argv);
     int size, rank;
