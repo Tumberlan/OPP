@@ -69,6 +69,16 @@ void MPI_mul_f(double *A, double *B, int N, int M, double *res, int proc_number)
     std::cout << '\n';
 }
 
+void MPI2_mul_f(double *A, double *B, int N, int M, double *res){
+    for(int i = 0; i < N;i++){
+        double tmp_string = 0;
+        for(int j = 0; j<M; j++){
+            tmp_string += A[j*N + i] * B[j];
+        }
+        res[i] = tmp_string;
+    }
+}
+
 double scalar(double *a, double *b, int N){
         double res = 0;
         for (int i = 0; i < N; i++) {
@@ -77,6 +87,7 @@ double scalar(double *a, double *b, int N){
         return res;
 
 }
+
 
 void const_mul(double *a, double value, int N, double* res){
     for(int i = 0; i < N; i++){
@@ -96,115 +107,81 @@ double vector_length(const double *vector, int N){
             sum += res[i];
         }
         return sqrt(sum);
+}
 
+
+double MPI_vector_length(const double *vector, int N){
+
+    double res[N];
+
+    for (int i = 0; i < N; i++) {
+        res[i] = vector[i] * vector[i];
+    }
+    double sum = 0;
+    for (int i = 0; i < N; i++) {
+        sum += res[i];
+    }
+    return sum;
 }
 
 void one_iter_f(double *Matrix, double *b, double *x, double* r, int N){
     double matrix_res[N];
     double mul_res[N];
-    //cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, N, 1, N, 1.0, Matrix,N, b, N, 0.0, res, N);
     double z[N];
     double epsilon = 0.00001;
 
-        std::cout << vector_length(r, N) << " " << vector_length(b, N) << "\n";
+        std::cout << "vl "<< (vector_length(r, N)/vector_length(b,N)) << "\n";
 
         while (vector_length(r, N) / vector_length(b, N) >= epsilon) {
 
             mul_f(Matrix, x, N, 1, matrix_res);
-            std::cout << '\n' << "matrix_res" << '\n';
-            for(int i = 0; i < N; i++){
+
+            std::cout<<"matrix_res"<<'\n';
+            for(int i = 0; i< N; i++){
                 std::cout << matrix_res[i] << '\n';
             }
             for (int i = 0; i < N; i++) {
                 r[i] = b[i] - matrix_res[i];
             }
-            std::cout << '\n' << "r" << '\n';
-            for(int i = 0; i < N; i++){
-                std::cout << r[i] << '\n';
-            }
-            std::cout<<'\n';
+
             for (int i = 0; i < N; i++) {
                 z[i] = r[i];
             }
 
-            std::cout << '\n' << "z" << '\n';
-            for(int i = 0; i < N; i++){
-                std::cout << z[i] << '\n';
-            }
-            std::cout<<'\n';
-
             mul_f(Matrix, z, N, 1, matrix_res);
-            std::cout << '\n' << "matrix_res" << '\n';
-            for(int i = 0; i < N; i++){
-                std::cout << matrix_res[i] << '\n';
-            }
-            std::cout<<'\n';
+
             double alpha = scalar(r, r, N) / scalar(matrix_res, z, N);
-            std::cout << '\n' << "alpha" << '\n';
-            std::cout << alpha << '\n';
-            std::cout<<'\n';
 
             double* next_x = new double[N];
             const_mul(z, alpha, N, mul_res);
-            std::cout << '\n' << "mul_res" << '\n';
-            for(int i = 0; i < N; i++){
-                std::cout << mul_res[i] << '\n';
-            }
-            std::cout<<'\n';
+
             for (int i = 0; i < N; i++) {
                 next_x[i] = x[i] + mul_res[i];
             }
 
 
-            std::cout << '\n' << "next_x" << '\n';
-            for(int i = 0; i < N; i++){
-                std::cout << next_x[i] << '\n';
-            }
-            std::cout<<'\n';
-
-
             mul_f(Matrix, z, N, 1, matrix_res);
-            std::cout << '\n' << "matrix_res" << '\n';
-            for(int i = 0; i < N; i++){
-                std::cout << matrix_res[i] << '\n';
-            }
-            std::cout<<'\n';
+
             const_mul(matrix_res, alpha, N, mul_res);
 
-            std::cout << '\n' << "mul_res" << '\n';
-            for(int i = 0; i < N; i++){
-                std::cout << mul_res[i] << '\n';
-            }
-            std::cout<<'\n';
+
             double* next_r = new double [N];
             for (int i = 0; i < N; i++) {
                 next_r[i] = r[i] - mul_res[i];
             }
-            std::cout << '\n' << "next_r" << '\n';
-            for(int i = 0; i < N; i++){
-                std::cout << next_r[i] << '\n';
-            }
-            std::cout<<'\n';
+
 
             double beta = scalar(next_r, next_r, N) / scalar(r, r, N);
-            std::cout << '\n' << "beta" << '\n';
-            std::cout << beta << '\n';
-            std::cout<<'\n';
+            std::cout << "top beta" << scalar(next_r,next_r,N) << '\n';
+            std::cout << "beta" << beta << '\n';
             double* next_z = new double [N];
             const_mul(z, beta, N, mul_res);
-            std::cout << '\n' << "mul_res" << '\n';
-            for(int i = 0; i < N; i++){
-                std::cout << mul_res[i] << '\n';
-            }
-            std::cout<<'\n';
+
+
             for (int i = 0; i < N; i++) {
                 next_z[i] = next_r[i] + mul_res[i];
             }
-            std::cout << '\n' << "next_z" << '\n';
-            for(int i = 0; i < N; i++){
-                std::cout << next_z[i] << '\n';
-            }
-            std::cout<<'\n';
+
 
             for (int i = 0; i < N; i++) {
                 z[i] = next_z[i];
@@ -249,11 +226,7 @@ void standart_prog(int argc, char** argv){
 
     std::cout << '\n';
 }
-//Mpi_comm_size
-//Mpi_comm_rank
-//Mpi_send
-//Mpi_recieve
-
+/*
 void mpi_1(int argc, char* argv[]){
    MPI_Init(&argc, &argv);
    int size, rank;
@@ -261,27 +234,29 @@ void mpi_1(int argc, char* argv[]){
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
    int M;
-   int N = 4;
-   int skip;
+   int N =4;
 
-   if(rank == 0){
-       double Matrix[N*N];
-       fill_matrix(Matrix, N);
+    M = N/size;
+    int collected_M = M;
+    for(int i = 1; i < rank+1; i ++){
+        M = (N-M*i)/(size-i);
+        collected_M += M;
+    }
+    collected_M -= M;
 
-       int ex_N = N;
-       int ex_size = size;
-       int skip = 0;
-       for(int i = 0; i < size; i++){
-           int M = ex_N/ex_size;
-           MPI_Send(&M, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
-           MPI_Send(Matrix+N*skip, N*M,MPI_DOUBLE, i,0,MPI_COMM_WORLD);
-           skip += M;
-           ex_N -= M;
-           ex_size--;
-       }
-   }
-    MPI_Recv(&M, 1, MPI_INT, 0,0,MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+    //MPI_Recv(&M, 1, MPI_INT, 0,0,MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     double* Matrix = new double [N*M];
+    int straighter = 0;
+    for(int i = 0; i < N*M; i++){
+        if(i+N*collected_M == N*(collected_M + straighter) + (collected_M + straighter)){
+            Matrix[i] = 2.0;
+            straighter++;
+        }else{
+            Matrix[i] = 1.0;
+        }
+    }
+
     double* x = new double(N);
     double* b = new double(N);
     double* r = new double(N);
@@ -291,7 +266,7 @@ void mpi_1(int argc, char* argv[]){
         r[i] = 1;
     }
     double epsilon = 0.00001;
-    MPI_Recv(&Matrix, N*M, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+   // MPI_Recv(&Matrix, N*M, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     double* matrix_res = new double[N];
     double* mul_res = new double[N];
     for(int i = 0; i < N; i++){
@@ -357,118 +332,210 @@ void mpi_1(int argc, char* argv[]){
     }
     MPI_Finalize();
 }
-/*
+*/
+
 void mpi_2(int argc, char* argv[]){
     MPI_Init(&argc, &argv);
     int size, rank;
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if(rank == 0){
-        int N;
-        std::cin >> N;
+    int M;
+    int N = 4;
 
-        double Matrix[N*N];
-        double b[N];
-        double x[N];
-        double r[N];
+    M = N/size;
+    int collected_M = M;
+    for(int i = 1; i < rank+1; i ++){
+        M = (N-M*i)/(size-i);
+        collected_M += M;
+    }
+    collected_M -= M;
 
-        fill_matrix(Matrix, N);
 
-        for(int i = 0; i < N; i++){
-            b[i] = i+1;
-            x[i] = 0;
-            r[i] = 1;
-        }
-
-        int ex_N = N;
-        int ex_size = size;
-        int skip = 0;
-        for(int i = 0; i < size; i++){
-            int M = ex_N/ex_size;
-            MPI_Send(&N, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
-            MPI_Send(&M, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
-            MPI_Send(Matrix+N*skip, N*M,MPI_DOUBLE, i,0,MPI_COMM_WORLD);
-            MPI_Send(x+M*skip, M, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
-            MPI_Send(b+skip, M, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
-            skip += M;
-            ex_N -= M;
-            ex_size--;
+    //MPI_Recv(&M, 1, MPI_INT, 0,0,MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    double* Matrix = new double [N*M];
+    int straighter = 0;
+    for(int i = 0; i < N*M; i++){
+        if(i+N*collected_M == N*(collected_M + straighter) + (collected_M + straighter)){
+            Matrix[i] = 2.0;
+            straighter++;
+        }else{
+            Matrix[i] = 1.0;
         }
     }
-    int N, M;
-    MPI_Recv(&N, 1, MPI_INT, 0,0,MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    MPI_Recv(&M, 1, MPI_INT, 0,0,MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    double Matrix[N*M];
-    double x[N];
-    double b[M];
-    double r[N];
+
+    double* x = new double[M];
+    double* b = new double[M];
+    double* r = new double[M];
+    for(int i = 0; i < M; i++){
+        b[i] = N+1;
+        x[i] = 0;
+        r[i] = 1;
+    }
     double epsilon = 0.00001;
-    MPI_Recv(&Matrix, N*M, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    MPI_Recv(&x, N, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    MPI_Recv(&b, M, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    double matrix_res[N];
-    double mul_res[N];
+    // MPI_Recv(&Matrix, N*M, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    double* matrix_res = new double[N];
+    double* mul_res = new double[N];
+    double* final_mul_res = new double[N];
     for(int i = 0; i < N; i++){
         matrix_res[i] = 0;
     }
 
 
 
-    while(vector_length(r, N) / vector_length(b, N) >= epsilon) {
-            MPI_mul_f(Matrix, x, M, 1, matrix_res, rank);
+    double vl_top = MPI_vector_length(r,M);
+    double vl_bot = MPI_vector_length(b, M);
+    double* vl_top_buf = new double[size];
+    double* vl_bot_buf = new double[size];
+    double final_vl_top = 0;
+    double final_vl_bot = 0;
+    MPI_Allreduce(&vl_top, vl_top_buf, M, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&vl_bot, vl_bot_buf, M, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    for(int i = 0; i < size; i++){
+        final_vl_top += vl_top_buf[i];
+        final_vl_bot += vl_bot_buf[i];
+    }
+    int iter_counter = 0;
 
-        MPI_Allreduce(&x, &matrix_res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    while(sqrt(vl_top) / sqrt(vl_bot) >= epsilon) {
+        MPI2_mul_f(Matrix, x, N, M, matrix_res);
 
-        for (int i = 0; i < N; i++) {
-            r[i] = b[i] - matrix_res[i];
+        double* final_matrix_res = new double[N];
+        MPI_Allreduce(matrix_res, final_matrix_res, N, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+        double* p_final_matrix_res = new double[M];
+        for(int i = 0; i < M; i++){
+            p_final_matrix_res[i] = final_matrix_res[i + collected_M];
         }
 
-        //
-        double z[N];
-        for (int i = 0; i < N; i++) {
+        for (int i = 0; i < M; i++) {
+            r[i] = b[i] - p_final_matrix_res[i];
+        }
+
+        double* z = new double[M];
+        for (int i = 0; i < M; i++) {
             z[i] = r[i];
         }
 
-        mul_f(Matrix, z, N, 1, matrix_res);
-        double alpha = scalar(r, r, N) / scalar(matrix_res, z, N);
 
-        double next_x[N];
-        const_mul(z, alpha, N, mul_res);
+        MPI2_mul_f(Matrix, z, N, M, matrix_res);
+        MPI_Allreduce(matrix_res, final_matrix_res, N, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+        for(int i = 0; i < M; i++){
+            p_final_matrix_res[i] = final_matrix_res[i + collected_M];
+        }
+
+        double alpha_top = scalar(r,r,M);
+        double alpha_bot = scalar(p_final_matrix_res,z,M);
+        double* alpha_top_buf = new double[1];
+        double* alpha_bot_buf = new double[1];
+        double final_alpha_top = 0;
+        double final_alpha_bot = 0;
+        MPI_Allreduce(&alpha_top, alpha_top_buf, M, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&alpha_bot, alpha_bot_buf, M, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        for(int i = 0; i < 1; i++){
+            final_alpha_top += alpha_top_buf[i];
+            final_alpha_bot += alpha_bot_buf[i];
+        }
+        double alpha = final_alpha_top / final_alpha_bot;
+
+        double* next_x = new double[M];
+        const_mul(z, alpha, M, mul_res);
         for (int i = 0; i < N; i++) {
             next_x[i] = x[i] + mul_res[i];
         }
 
 
-        mul_f(Matrix, z, N, 1, matrix_res);
-        const_mul(matrix_res, alpha, N, mul_res);
-        double next_r[N];
-        for (int i = 0; i < N; i++) {
+        MPI2_mul_f(Matrix, z, N, M, matrix_res);
+        MPI_Allreduce(matrix_res, final_matrix_res, N, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+        for(int i = 0; i < M; i++){
+            p_final_matrix_res[i] = final_matrix_res[i + collected_M];
+        }
+
+        const_mul(p_final_matrix_res, alpha, M, mul_res);
+        double* next_r = new double[M];
+        for (int i = 0; i < M; i++) {
             next_r[i] = r[i] - mul_res[i];
         }
 
-        double beta = scalar(next_r, next_r, N) / scalar(r, r, N);
 
-        double next_z[N];
-        const_mul(z, beta, N, mul_res);
-        for (int i = 0; i < N; i++) {
+        double beta_top = scalar(next_r,next_r,M);
+        double beta_bot = scalar(r,r,M);
+        double* beta_top_buf = new double[1];
+        double* beta_bot_buf = new double[1];
+        double final_beta_top = 0;
+        double final_beta_bot = 0;
+        MPI_Allreduce(&beta_top, beta_top_buf, M, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&beta_bot, beta_bot_buf, M, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        for(int i = 0; i < size; i++){
+            final_beta_top += beta_top_buf[i];
+            final_beta_bot += beta_bot_buf[i];
+        }
+        double beta = beta_top / beta_bot;
+
+        double* next_z = new double[M];
+        const_mul(z, beta, M, mul_res);
+        for (int i = 0; i < M; i++) {
             next_z[i] = next_r[i] + mul_res[i];
         }
 
-        for (int i = 0; i < N; i++) {
+        for (int i = 0; i < M; i++) {
             z[i] = next_z[i];
             x[i] = next_x[i];
             r[i] = next_r[i];
         }
-        std::cout << vector_length(r, N) / vector_length(b, N) << "\n";
+        vl_top = MPI_vector_length(r,M);
+        vl_bot = MPI_vector_length(b, M);
+        final_vl_top = 0;
+        final_vl_bot = 0;
+        MPI_Allreduce(&vl_top, vl_top_buf, M, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&vl_bot, vl_bot_buf, M, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        for(int i = 0; i < size; i++){
+            final_vl_top += vl_top_buf[i];
+            final_vl_bot += vl_bot_buf[i];
+        }
+        iter_counter++;
+        delete[] alpha_bot_buf;
+        delete[] alpha_top_buf;
+        delete[] beta_bot_buf;
+        delete[] beta_top_buf;
+        delete[] p_final_matrix_res;
+        delete[] z;
+        delete[] next_r;
+        delete[] next_z;
+        delete[] next_x;
     }
 
-    for(int i = 0; i < N; i++){
-        std::cout << x[i] << '\n';
+
+    double* buf_x = new double [N];
+    for(int i = 0; i < M;i++){
+        buf_x[collected_M + i] = x[i];
     }
+    double * final_buf_x = new double [N];
+
+    MPI_Allreduce(buf_x,final_buf_x, N, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+    std::cout<< "answer x" << '\n';
+    for(int i = 0; i < N; i++){
+        std::cout << final_buf_x[i] << '\n';
+    }
+
+    std::cout<< "iter_counter: " << iter_counter << '\n';
+    delete[] mul_res;
+    delete[] matrix_res;
+    delete[] final_buf_x;
+    delete[] buf_x;
+    delete[] final_mul_res;
+    delete[] x;
+    delete[] r;
+    delete[] b;
+    delete[] Matrix;
+    delete[] vl_top_buf;
+    delete[] vl_bot_buf;
     MPI_Finalize();
 }
-*/
+
 
 int main(int argc, char** argv) {
 
