@@ -54,19 +54,14 @@ void mul_f(double *A, double *B, int N, int M, double *res){
 
 }
 
-void MPI_mul_f(double *A, double *B, int N, int M, double *res, int proc_number){
+void MPI_mul_f(double *A, double *B, int N, int M, double *res, int proc_number, int collected_M){
     for(int i = 0; i < M;i++){
         double tmp_string = 0;
         for(int j = 0; j<N; j++){
             tmp_string += A[i*N + j] * B[j];
         }
-        res[M*proc_number+i] = tmp_string;
+        res[collected_M+i] = tmp_string;
     }
-    std::cout << "MPI res" << '\n';
-    for (int i = 0; i < N; i++){
-        std::cout << res[i] << '\n';
-    }
-    std::cout << '\n';
 }
 
 void MPI2_mul_f(double *A, double *B, int N, int M, double *res){
@@ -239,7 +234,7 @@ void mpi_1(int argc, char* argv[]){
     M = N/size;
     int collected_M = M;
     for(int i = 1; i < rank+1; i ++){
-        M = (N-M*i)/(size-i);
+        M = (N-collected_M)/(size-i);
         collected_M += M;
     }
     collected_M -= M;
@@ -276,7 +271,7 @@ void mpi_1(int argc, char* argv[]){
 
 
     while(vector_length(r, N) / vector_length(b, N) >= epsilon) {
-        MPI_mul_f(Matrix, x, M, 1, matrix_res, rank);
+        MPI_mul_f(Matrix, x, M, 1, matrix_res, rank, collected_M);
 
         double* final_matrix_res = new double[N];
         MPI_Allreduce(matrix_res, final_matrix_res, N, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -291,7 +286,7 @@ void mpi_1(int argc, char* argv[]){
         }
 
 
-        MPI_mul_f(Matrix, z, N, M, matrix_res,rank);
+        MPI_mul_f(Matrix, z, N, M, matrix_res,rank, collected_M);
         MPI_Allreduce(matrix_res, final_matrix_res, N, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         double alpha = scalar(r, r, N) / scalar(final_matrix_res, z, N);
 
@@ -302,7 +297,7 @@ void mpi_1(int argc, char* argv[]){
         }
 
 
-        MPI_mul_f(Matrix, z, N, M, matrix_res, rank);
+        MPI_mul_f(Matrix, z, N, M, matrix_res, rank, collected_M);
         MPI_Allreduce(matrix_res, final_matrix_res, N, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
         const_mul(final_matrix_res, alpha, N, mul_res);
@@ -346,7 +341,7 @@ void mpi_2(int argc, char* argv[]){
     M = N/size;
     int collected_M = M;
     for(int i = 1; i < rank+1; i ++){
-        M = (N-M*i)/(size-i);
+        M = (N-collected_M)/(size-i);
         collected_M += M;
     }
     collected_M -= M;
