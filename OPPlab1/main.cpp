@@ -1,7 +1,8 @@
 #include <iostream>
 #include <cmath>
 #include <malloc.h>
-#include "C:\Program Files (x86)\Microsoft SDKs\MPI\Include\mpi.h"
+#include <mpi.h>
+//#include "C:\Program Files (x86)\Microsoft SDKs\MPI\Include\mpi.h"
 //#include <cblas>
 #define CLEAR 0
 #define MPI1 1
@@ -124,17 +125,13 @@ void one_iter_f(double *Matrix, double *b, double *x, double* r, int N){
     double mul_res[N];
     double z[N];
     double epsilon = 0.00001;
+    int iter_counter = 0;
 
-        std::cout << "vl "<< (vector_length(r, N)/vector_length(b,N)) << "\n";
 
         while (vector_length(r, N) / vector_length(b, N) >= epsilon) {
 
             mul_f(Matrix, x, N, 1, matrix_res);
 
-            std::cout<<"matrix_res"<<'\n';
-            for(int i = 0; i< N; i++){
-                std::cout << matrix_res[i] << '\n';
-            }
             for (int i = 0; i < N; i++) {
                 r[i] = b[i] - matrix_res[i];
             }
@@ -167,8 +164,6 @@ void one_iter_f(double *Matrix, double *b, double *x, double* r, int N){
 
 
             double beta = scalar(next_r, next_r, N) / scalar(r, r, N);
-            std::cout << "top beta" << scalar(next_r,next_r,N) << '\n';
-            std::cout << "beta" << beta << '\n';
             double* next_z = new double [N];
             const_mul(z, beta, N, mul_res);
 
@@ -183,15 +178,17 @@ void one_iter_f(double *Matrix, double *b, double *x, double* r, int N){
                 x[i] = next_x[i];
                 r[i] = next_r[i];
             }
-            std::cout <<"epsilon checker: " << vector_length(r, N) / vector_length(b, N) << "\n";
+            iter_counter++;
+
         }
+
+        std:: cout << "iter counter: " << iter_counter << '\n';
 
 }
 
 
 void standart_prog(int argc, char** argv){
-    int N;
-    std::cin >> N;
+    int N = 4;
 
     double * Matrix= new double [N*N];
 
@@ -207,10 +204,6 @@ void standart_prog(int argc, char** argv){
         r[i] = 1;
     }
 
-    std::cout << '\n' << "b  x  r" << '\n';
-    for(int i = 0; i < N; i++){
-        std:: cout << b[i] << "  " << x[i] << "  " << r[i] << '\n';
-    }
 
     one_iter_f(Matrix, b, x, r, N);
 
@@ -219,8 +212,9 @@ void standart_prog(int argc, char** argv){
         std:: cout << x[i] << '\n';
     }
 
-    std::cout << '\n';
 }
+
+
 /*
 void mpi_1(int argc, char* argv[]){
    MPI_Init(&argc, &argv);
@@ -252,9 +246,9 @@ void mpi_1(int argc, char* argv[]){
         }
     }
 
-    double* x = new double(N);
-    double* b = new double(N);
-    double* r = new double(N);
+    double* x = new double[N];
+    double* b = new double[N];
+    double* r = new double[N];
     for(int i = 0; i < N; i++){
         b[i] = N+1;
         x[i] = 0;
@@ -269,9 +263,10 @@ void mpi_1(int argc, char* argv[]){
     }
 
 
+    int iter_counter = 0;
 
     while(vector_length(r, N) / vector_length(b, N) >= epsilon) {
-        MPI_mul_f(Matrix, x, M, 1, matrix_res, rank, collected_M);
+        MPI_mul_f(Matrix, x, N, M, matrix_res, rank, collected_M);
 
         double* final_matrix_res = new double[N];
         MPI_Allreduce(matrix_res, final_matrix_res, N, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -290,7 +285,7 @@ void mpi_1(int argc, char* argv[]){
         MPI_Allreduce(matrix_res, final_matrix_res, N, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         double alpha = scalar(r, r, N) / scalar(final_matrix_res, z, N);
 
-        double* next_x = new double(N);
+        double* next_x = new double[N];
         const_mul(z, alpha, N, mul_res);
         for (int i = 0; i < N; i++) {
             next_x[i] = x[i] + mul_res[i];
@@ -319,12 +314,21 @@ void mpi_1(int argc, char* argv[]){
             x[i] = next_x[i];
             r[i] = next_r[i];
         }
-        std::cout << vector_length(r, N) / vector_length(b, N) << "\n";
+
+        iter_counter++;
     }
 
+    std::cout << "iter_counter: " << iter_counter << '\n';
+    std::cout << "final x" << '\n';
     for(int i = 0; i < N; i++){
         std::cout << x[i] << '\n';
     }
+    delete[] Matrix;
+    delete[] r;
+    delete[] x;
+    delete[] matrix_res;
+    delete[] mul_res;
+    delete[] b;
     MPI_Finalize();
 }
 */
@@ -392,7 +396,7 @@ void mpi_2(int argc, char* argv[]){
     }
     int iter_counter = 0;
 
-    while(sqrt(vl_top) / sqrt(vl_bot) >= epsilon) {
+    while(sqrt(final_vl_top) / sqrt(final_vl_bot) >= epsilon) {
         MPI2_mul_f(Matrix, x, N, M, matrix_res);
 
         double* final_matrix_res = new double[N];
@@ -531,10 +535,10 @@ void mpi_2(int argc, char* argv[]){
     MPI_Finalize();
 }
 
-
 int main(int argc, char** argv) {
 
-    standart_prog(argc,argv);
+    //standart_prog(argc,argv);
     //mpi_1(argc,argv);
+    mpi_2(argc, argv);
     return 0;
 }
