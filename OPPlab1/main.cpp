@@ -1,10 +1,10 @@
 #include <iostream>
 #include <cmath>
 #include <malloc.h>
-#include <mpi.h>
+//#include <mpi.h>
 #include <stdlib.h>
 #include <time.h>
-//#include "C:\Program Files (x86)\Microsoft SDKs\MPI\Include\mpi.h"
+#include "C:\Program Files (x86)\Microsoft SDKs\MPI\Include\mpi.h"
 
 void fill_matrix(double* Matrix, int N){
 
@@ -198,7 +198,7 @@ void one_iter_f(double *Matrix, double *b, double *x, double* r, int N){
 
 
 void standart_prog(int argc, char** argv){
-    int N = 2000;
+    int N = 4000;
 
     double * Matrix= new double [N*N];
 
@@ -231,7 +231,7 @@ void mpi_1(int argc, char* argv[]){
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
    int M;
-   int N = 2000;
+   int N = 4000;
 
     M = N/size;
     int collected_M = M;
@@ -310,7 +310,7 @@ void mpi_1(int argc, char* argv[]){
         z[i] = r[i];
     }
 
-    std::cout << "AASS" << double(vector_length(r, N) / vector_length(b, N)) << '\n';
+
     while(double(vector_length(r, N) / vector_length(b, N)) >= epsilon) {
 
 
@@ -353,7 +353,6 @@ void mpi_1(int argc, char* argv[]){
         delete[] next_z;
 
         iter_counter++;
-        std::cout << "AASS " << iter_counter << " " << double(vector_length(r, N) / vector_length(b, N)) << '\n';
 
     }
 
@@ -379,7 +378,7 @@ void mpi_2(int argc, char* argv[]){
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     int M;
-    int N = 2000;
+    int N = 4000;
 
     M = N/size;
     int collected_M = M;
@@ -468,7 +467,7 @@ void mpi_2(int argc, char* argv[]){
     MPI_Allreduce(&vl_top, &final_vl_top, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     MPI_Allreduce(&vl_bot, &final_vl_bot, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     int iter_counter = 0;
-    std::cout << "AASS" << double (sqrt(final_vl_top)/sqrt(final_vl_bot)) << '\n';
+
     while(double(sqrt(final_vl_top) / sqrt(final_vl_bot)) >= epsilon) {
 
         MPI2_mul_f(Matrix, z, N, M, matrix_res);
@@ -539,7 +538,7 @@ void mpi_2(int argc, char* argv[]){
         delete[] next_r;
         delete[] next_z;
         delete[] next_x;
-        std::cout << "AASS" << double (sqrt(final_vl_top)/sqrt(final_vl_bot)) << '\n';
+
     }
 
 
