@@ -1,0 +1,3 @@
+C:/Users/Igor/ProgProjects/OPP/OPPlab2/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+C:/Users/Igor/ProgProjects/OPP/OPPlab2/cmake-build-debug/CMakeFiles/OPPlab2.dir
+C:/Users/Igor/ProgProjects/OPP/OPPlab2/cmake-build-debug/CMakeFiles/edit_cache.dir
