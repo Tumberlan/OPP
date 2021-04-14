@@ -241,7 +241,12 @@ void prog_2(int argc, char** argv){
 #pragma omp parallel
     {
 //mul_f(Matrix, u, N, 1, b);
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
         for (int i = 0; i < N; i++) {
             double tmp_string = 0;
             for (int j = 0; j < N; j++) {
@@ -253,7 +258,12 @@ void prog_2(int argc, char** argv){
 
 
         //mul_f(Matrix, x, N, 1, matrix_res);
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
         for (int i = 0; i < N; i++) {
             double tmp_string = 0;
             for (int j = 0; j < N; j++) {
@@ -263,12 +273,22 @@ void prog_2(int argc, char** argv){
         }
 
 
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
         for (int i = 0; i < N; i++) {
             r[i] = b[i] - matrix_res[i];
         }
 
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
         for (int i = 0; i < N; i++) {
             z[i] = r[i];
         }
@@ -279,7 +299,12 @@ void prog_2(int argc, char** argv){
 #pragma omp reduction (+: sum_top)
         {
             double local_sum_top = 0;
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
             for (int i = 0; i < N; i++) {
                 local_sum_top += r[i] * r[i];
             }
@@ -289,7 +314,12 @@ void prog_2(int argc, char** argv){
 #pragma omp reduction (+: sum_bot)
         {
             double local_sum_bot = 0;
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
             for (int i = 0; i < N; i++) {
                 local_sum_bot += b[i] * b[i];
             }
@@ -301,7 +331,12 @@ void prog_2(int argc, char** argv){
         while (double(sqrt(sum_top) / sqrt(sum_bot)) >= epsilon) {
 
             //mul_f(Matrix, z, N, 1, matrix_res);
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
             for (int i = 0; i < N; i++) {
                 double tmp_string = 0;
                 for (int j = 0; j < N; j++) {
@@ -316,7 +351,12 @@ void prog_2(int argc, char** argv){
 #pragma omp reduction (+: res_top)
             {
                 double local_res_top = 0;
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
                 for (int i = 0; i < N; i++) {
                     local_res_top += r[i] * r[i];
                 }
@@ -327,7 +367,12 @@ void prog_2(int argc, char** argv){
 #pragma omp reduction (+: res_bot)
             {
                 double local_res_bot = 0;
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
                 for (int i = 0; i < N; i++) {
                     local_res_bot += matrix_res[i] * z[i];
                 }
@@ -340,19 +385,34 @@ void prog_2(int argc, char** argv){
 
 
             //const_mul(z, alpha, N, mul_res);
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
             for (int i = 0; i < N; i++) {
                 mul_res[i] = z[i] * alpha;
             }
 
 
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
             for (int i = 0; i < N; i++) {
                 next_x[i] = x[i] + mul_res[i];
             }
 
             //mul_f(Matrix, z, N, 1, matrix_res);
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
             for (int i = 0; i < N; i++) {
                 double tmp_string = 0;
                 for (int j = 0; j < N; j++) {
@@ -363,14 +423,24 @@ void prog_2(int argc, char** argv){
 
 
             //const_mul(matrix_res, alpha, N, mul_res);
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
             for (int i = 0; i < N; i++) {
                 mul_res[i] = matrix_res[i] * alpha;
             }
 
 
 
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
             for (int i = 0; i < N; i++) {
                 next_r[i] = r[i] - mul_res[i];
             }
@@ -381,7 +451,12 @@ void prog_2(int argc, char** argv){
 #pragma omp reduction (+: res_top)
             {
                 double local_res_top = 0;
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
                 for (int i = 0; i < N; i++) {
                     local_res_top += next_r[i] * next_r[i];
                 }
@@ -392,7 +467,12 @@ void prog_2(int argc, char** argv){
 #pragma omp reduction (+: res_bot)
             {
                 double local_res_bot = 0;
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
                 for (int i = 0; i < N; i++) {
                     local_res_bot += r[i] * r[i];
                 }
@@ -403,13 +483,23 @@ void prog_2(int argc, char** argv){
 
             beta = res_top / res_bot;
             //const_mul(z, beta, N, mul_res);
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
             for (int i = 0; i < N; i++) {
                 mul_res[i] = z[i] * beta;
             }
 
 
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
             for (int i = 0; i < N; i++) {
                 next_z[i] = next_r[i] + mul_res[i];
             }
@@ -426,7 +516,12 @@ void prog_2(int argc, char** argv){
 #pragma omp reduction (+: sum_top)
             {
                 double local_sum_top = 0;
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
                 for (int i = 0; i < N; i++) {
                     local_sum_top += r[i] * r[i];
                 }
@@ -437,7 +532,12 @@ void prog_2(int argc, char** argv){
 #pragma omp reduction (+: sum_bot)
             {
                 double local_sum_bot = 0;
-#pragma omp for 
+//#pragma omp for schedule(static)
+//#pragma omp for schedule(static, 2)
+//#pragma omp for schedule(dynamic)
+//#pragma omp for schedule(dynamic, 2)
+//#pragma omp for schedule(guided)
+#pragma omp for schedule(guided, 2)     
                 for (int i = 0; i < N; i++) {
                     local_sum_bot += b[i] * b[i];
                 }
