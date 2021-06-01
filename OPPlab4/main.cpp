@@ -110,16 +110,9 @@ void algorythm(int argc, char* argv[]){
     int size, rank;
     MPI_Comm_size(MPI_COMM_WORLD,&size);
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-    int dims[2] = { 1, size };
-    int periods[2] = { 0, 0 };
-    int coords[2] = { 0, 0 };
-    int prev_proc, next_proc;
-    int reorder = 1;
-    MPI_Comm dec_comm;
-    MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, reorder, &dec_comm);
-    MPI_Cart_get(dec_comm, 2, dims, periods, coords);
-    MPI_Cart_shift(dec_comm, 1, 1, &prev_proc, &next_proc);
 
+    int prev_proc = rank - 1;
+    int next_proc = rank + 1;
     int x0 = -1;
     int y0 = -1;
     int z0 = -1;
@@ -165,24 +158,6 @@ void algorythm(int argc, char* argv[]){
 
 
         if(rank != 0){
-            for(int i = 0; i < NY; i++){
-                for(int j = 0; j < NZ; j++){
-                    prev_fi[0][i*NZ + j] = fi[0][i*NZ + j];
-                }
-            }
-        }
-
-
-        if(rank != size-1){
-            for(int i = 0;i < NY; i++){
-                for (int j = 0; j < NZ; j++) {
-                    prev_fi[x_for_proc-1][i*NZ + j] = fi[x_for_proc-1][i*NZ + j];
-                }
-            }
-        }
-
-
-        if(rank != 0){
             for(int i = 0;i < NY; i++){
                 for (int j = 0; j < NZ; j++) {
                     formula(fi, prev_fi, 1, i, j);
@@ -220,14 +195,6 @@ void algorythm(int argc, char* argv[]){
             MPI_Isend(sending_last_border, NY*NZ, MPI_DOUBLE, next_proc, 1, MPI_COMM_WORLD, &req[1]);
         }
 
-        for(int i = 2; i < x_for_proc - 2; i++){
-            for(int j = 1; j < NY-1; j++){
-                for(int k = 1; k < NZ-1; k++){
-                    formula(fi, prev_fi, i, j, k);
-                }
-            }
-        }
-
 
         if(rank != 0){
             MPI_Irecv(prev_proc_last_border, NY*NZ, MPI_DOUBLE, prev_proc, 1, MPI_COMM_WORLD, &req[2]);
@@ -245,6 +212,15 @@ void algorythm(int argc, char* argv[]){
             MPI_Wait(&req[1], &status[1]);
             MPI_Wait(&req[3], &status[3]);
         }
+
+        for(int i = 2; i < x_for_proc - 2; i++){
+            for(int j = 1; j < NY-1; j++){
+                for(int k = 1; k < NZ-1; k++){
+                    formula(fi, prev_fi, i, j, k);
+                }
+            }
+        }
+
 
         local_max_eps = count_res_for_epsilon(fi, prev_fi, x_for_proc);
         MPI_Allreduce(&local_max_eps, &max_eps, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);

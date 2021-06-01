@@ -125,6 +125,7 @@ void programm(int argc, char* argv[]){
     Matrix_mul(local_A, local_B, local_C, proc_number_of_rows, proc_number_of_columns);
 
     MPI_Barrier(comm_cart);
+    //print_local_Matrix(local_C, proc_number_of_rows, proc_number_of_columns);
     MPI_Gather(local_C, proc_number_of_rows*proc_number_of_columns, MPI_DOUBLE, C, proc_number_of_rows*proc_number_of_columns, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     double* result_C = new double [N*M];
